@@ -4,6 +4,7 @@ from notes import views
 
 app_name = 'notes'
 
+
 urlpatterns = [
     path('', views.Home.as_view(), name='home'),
     path('add/', views.NoteCreate.as_view(), name='add'),
