@@ -33,14 +33,9 @@ class TestRoutes(TestCase):
 
     def test_pages_available(self):
         """Проверка страниц, доступных любому пользователю."""
-        urls = (
-            ('notes:home', None),
-        )
-        for name, args in urls:
-            with self.subTest(name=name):
-                url = reverse(name, args=args)
-                response = self.client.get(url)
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+        url = reverse('notes:home')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_pages_availability_for_auth_user(self):
         """Проверка страниц, доступных любому авторизованному пользователю."""
@@ -64,14 +59,14 @@ class TestRoutes(TestCase):
         )
         for user, status in users_statuses:
             self.client.force_login(user)
-            for name in ('notes:edit', 'notes:delete'):  
+            for name in ('notes:edit', 'notes:delete'):
                 with self.subTest(user=user, name=name):
                     url = reverse(name, args=(self.note.slug,))
                     response = self.client.get(url)
                     self.assertEqual(response.status_code, status)
 
     def test_redirect_for_anonymous_user(self):
-        """Проверка редиректа для неавторизованного пользователя."""
+        """Редирект анонима на страницу логина."""
         login_url = reverse('users:login')
         urls = (
             ('notes:add', None),

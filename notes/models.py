@@ -5,6 +5,8 @@ from pytils.translit import slugify
 
 
 class Note(models.Model):
+    """Модель заметки."""
+
     title = models.CharField(
         'Заголовок',
         max_length=100,
