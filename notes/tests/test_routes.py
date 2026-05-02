@@ -33,9 +33,19 @@ class TestRoutes(TestCase):
 
     def test_pages_available(self):
         """Проверка страниц, доступных любому пользователю."""
-        url = reverse('notes:home')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        urls = (
+            'notes:home',
+            'users:login',
+            'users:signup',
+        )
+        for name in urls:
+            with self.subTest(name=name):
+                url = reverse(name)
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
+        logout_url = reverse('users:logout')
+        response = self.client.post(logout_url)
+        self.assertIn(response.status_code, (HTTPStatus.OK, HTTPStatus.FOUND))
 
     def test_pages_availability_for_auth_user(self):
         """Проверка страниц, доступных любому авторизованному пользователю."""
@@ -59,7 +69,7 @@ class TestRoutes(TestCase):
         )
         for user, status in users_statuses:
             self.client.force_login(user)
-            for name in ('notes:edit', 'notes:delete'):
+            for name in ('notes:detail', 'notes:edit', 'notes:delete'):
                 with self.subTest(user=user, name=name):
                     url = reverse(name, args=(self.note.slug,))
                     response = self.client.get(url)
@@ -71,6 +81,7 @@ class TestRoutes(TestCase):
         urls = (
             ('notes:add', None),
             ('notes:list', None),
+            ('notes:success', None),
             ('notes:detail', (self.note.slug,)),
             ('notes:edit', (self.note.slug,)),
             ('notes:delete', (self.note.slug,)),

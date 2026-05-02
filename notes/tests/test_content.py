@@ -27,7 +27,6 @@ class TestListPage(TestCase):
     def setUpTestData(cls):
         cls.author = User.objects.create_user(username='author')
         cls.other_user = User.objects.create_user(username='other')
-
         cls.note = Note.objects.create(
             title='Моя заметка',
             text='Текст',
@@ -44,8 +43,8 @@ class TestListPage(TestCase):
     def test_list_only_author_notes(self):
         """В списке только заметки текущего пользователя."""
         self.client.force_login(self.author)
-        response = self.client.get(reverse('notes:list'))
-
+        url = reverse('notes:list')
+        response = self.client.get(url)
         object_list = response.context['object_list']
         self.assertIn(self.note, object_list)
         self.assertNotIn(self.other_note, object_list)
@@ -69,7 +68,6 @@ class TestDetailPage(TestCase):
         """Автор может открыть свою заметку."""
         self.client.force_login(self.author)
         response = self.client.get(self.url)
-
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.context['object'], self.note)
 
@@ -96,26 +94,22 @@ class TestCreateEditPages(TestCase):
     def test_create_page_has_form(self):
         """Страница создания содержит форму."""
         self.client.force_login(self.user)
-        response = self.client.get(reverse('notes:add'))
-
+        url = reverse('notes:add')
+        response = self.client.get(url)
         self.assertIn('form', response.context)
         self.assertIsInstance(response.context['form'], NoteForm)
 
     def test_edit_page_has_form(self):
         """Страница редактирования содержит форму."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            reverse('notes:edit', args=(self.note.slug,))
-        )
-
+        url = reverse('notes:edit', args=(self.note.slug,))
+        response = self.client.get(url)
         self.assertIn('form', response.context)
         self.assertIsInstance(response.context['form'], NoteForm)
 
     def test_delete_page_confirmation(self):
         """Страница удаления содержит подтверждение."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            reverse('notes:delete', args=(self.note.slug,))
-        )
-
+        url = reverse('notes:delete', args=(self.note.slug,))
+        response = self.client.get(url)
         self.assertContains(response, 'Удалить заметку')

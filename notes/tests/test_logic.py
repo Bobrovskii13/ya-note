@@ -1,10 +1,11 @@
 from http import HTTPStatus
+from pytils.translit import slugify
 
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from notes.forms import NoteForm
+from notes.forms import WARNING
 from notes.models import Note
 
 User = get_user_model()
@@ -107,29 +108,27 @@ class TestNoteFormLogic(BaseNoteTestCase):
     """Тесты логики формы."""
 
     def test_slug_autogeneration(self):
-        """Slug создаётся автоматически."""
-        note = Note.objects.create(
-            title='Новая заметка',
-            text='Текст',
-            author=self.author
-        )
-        self.assertEqual(note.slug, 'novaya-zametka')
-
-    def test_form_generates_slug(self):
-        """Форма генерирует slug."""
-        form = NoteForm(data={
-            'title': 'Заголовок',
-            'text': 'Текст'
-        })
-        self.assertTrue(form.is_valid())
-        self.assertEqual(form.cleaned_data['slug'], 'zagolovok')
+        """Проверка автоматической генерации slug."""
+        notes_count = Note.objects.count()
+        title = 'Новая заметка'
+        data = {'title': title, 'text': 'Текст'}
+        self.author_client.post(self.add_url, data=data)
+        self.assertEqual(Note.objects.count(), notes_count + 1)
+        new_note = Note.objects.latest('id')
+        expected_slug = slugify(title)
+        self.assertEqual(new_note.slug, expected_slug)
 
     def test_duplicate_slug_error(self):
         """Ошибка при дублировании slug."""
-        form = NoteForm(data={
-            'title': 'Другой',
+        data = {
+            'title': 'Другой заголовок',
             'text': 'Текст',
             'slug': self.NOTE_SLUG
-        })
-        self.assertFalse(form.is_valid())
-        self.assertIn('slug', form.errors)
+        }
+        response = self.author_client.post(self.add_url, data=data)
+        self.assertFormError(
+            response.context['form'],
+            'slug',
+            errors=(self.NOTE_SLUG + WARNING)
+        )
+        self.assertEqual(Note.objects.count(), 1)
